@@ -35,10 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Verificar se o usuário está logado ao carregar a página
     const checkAuth = async () => {
       try {
-        // Em uma aplicação real, você verificaria o token JWT ou a sessão
         const storedUser = localStorage.getItem("user")
         if (storedUser) {
           setUser(JSON.parse(storedUser))
@@ -54,13 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = async (userData: User) => {
-    // Em uma aplicação real, você armazenaria o token JWT
     localStorage.setItem("user", JSON.stringify(userData))
     setUser(userData)
   }
 
   const logout = async () => {
-    // Em uma aplicação real, você invalidaria o token JWT
     localStorage.removeItem("user")
     setUser(null)
   }
