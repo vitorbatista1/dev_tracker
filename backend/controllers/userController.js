@@ -28,15 +28,21 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+
 const editUser = async (req, res) => {
   try {
-    const { error } = usuarioSchema.validate(req.body, { stripUnknown: true });
+    const { error, value } = usuarioSchema.validate(req.body, { stripUnknown: true });
 
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const updatedUser = await userService.editUser(req.params.id, req.body);
+    const updatedUser = await userService.editUser(req.params.id, value);
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
     res.status(200).json(updatedUser);
   } catch (err) {
     console.error(err);

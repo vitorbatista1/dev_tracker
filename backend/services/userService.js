@@ -12,8 +12,8 @@ const getAllUsers = async () => {
     return usuarios;
 };
 
-const editUser = async (id, user) => {
-  const updatedUser = await Usuario.findByIdAndUpdate(id, user, { new: true });
+const editUser = async (id, userData) => {
+  const updatedUser = await Usuario.findByIdAndUpdate(id, userData, { new: true });
   return updatedUser;
 };
 
