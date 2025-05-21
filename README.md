@@ -2,7 +2,7 @@
 
 Um aplicativo web moderno para gerenciar projetos de desenvolvimento, acompanhar tarefas e monitorar o progresso da equipe.
 
-![Dashboard do Sistema](https://via.placeholder.com/800x400?text=Dashboard+do+Sistema)
+![Dashboard do Sistema](https://i.ibb.co/cS8NTtcS/Captura-de-Tela-2025-05-20-a-s-21-40-03.png)
 
 ## 📋 Sobre o Projeto
 
