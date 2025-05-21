@@ -1,0 +1,85 @@
+.projetos-container {
+  display: flex;
+  height: 100vh;
+}
+
+.projetos-content {
+  margin-left: 250px;
+  padding: 2rem;
+  width: calc(100% - 250px);
+  background-color: #f8f9fa;
+  overflow-y: auto;
+}
+
+.table {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border-collapse: collapse;
+}
+
+.project-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #6c757d;
+  padding: 1rem;
+  text-align: left;
+}
+
+.project-table td {
+  vertical-align: middle;
+  padding: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.project-name {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 0.4em 0.75em;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-in-progress {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-planning {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+.status-on-hold {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.status-completed {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.team-members {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.team-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #dee2e6;
+  color: #495057;
+  font-weight: bold;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
