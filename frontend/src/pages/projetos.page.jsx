@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Button, Container, Form, Table } from 'react-bootstrap';
+import {
+  Button,
+  Container,
+  Form,
+  Table,
+  Modal,
+} from 'react-bootstrap';
 import { FaPlus } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import '../styles/projetos.style.css';
@@ -61,6 +67,13 @@ const statusVariant = (status) => {
 const Projetos = () => {
   const [projetos, setProjetos] = useState(projetosData);
   const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [novoProjeto, setNovoProjeto] = useState({
+    nome: '',
+    descricao: '',
+    status: 'Planning',
+    equipe: '',
+  });
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -73,7 +86,33 @@ const Projetos = () => {
   };
 
   const handleNewProject = () => {
-    alert('Nova funcionalidade para criar um projeto!');
+    setShowModal(true);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNovoProjeto((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddProjeto = () => {
+    const novo = {
+      ...novoProjeto,
+      id: projetos.length + 1,
+      equipe: novoProjeto.equipe
+        ? novoProjeto.equipe.split(',').map((m) => m.trim().slice(0, 1).toUpperCase())
+        : [],
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
+    };
+
+    setProjetos([novo, ...projetos]);
+    setShowModal(false);
+    setNovoProjeto({
+      nome: '',
+      descricao: '',
+      status: 'Planning',
+      equipe: '',
+    });
   };
 
   return (
@@ -150,6 +189,72 @@ const Projetos = () => {
             ))}
           </tbody>
         </Table>
+
+        {/* Modal Novo Projeto */}
+        <Modal show={showModal} onHide={() => setShowModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Novo Projeto</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Nome</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="nome"
+                  value={novoProjeto.nome}
+                  onChange={handleInputChange}
+                  placeholder="Nome do projeto"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Descrição</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  name="descricao"
+                  value={novoProjeto.descricao}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Status</Form.Label>
+                <Form.Select
+                  name="status"
+                  value={novoProjeto.status}
+                  onChange={handleInputChange}
+                >
+                  <option value="Planning">Planning</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="Completed">Completed</option>
+                </Form.Select>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Membros (iniciais separados por vírgula)</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="equipe"
+                  value={novoProjeto.equipe}
+                  onChange={handleInputChange}
+                  placeholder="Ex: A, P, D"
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="primary" onClick={handleAddProjeto}>
+              Adicionar Projeto
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
   );

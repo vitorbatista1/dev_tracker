@@ -1,48 +1,18 @@
-import React from 'react';
-import { Button, Table, Container, Row, Col } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import {
+  Button,
+  Table,
+  Container,
+  Row,
+  Col,
+  Modal,
+  Form,
+} from 'react-bootstrap';
 import { FaUserPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 
-const membros = [
-  {
-    id: 1,
-    nome: 'Admin User',
-    email: 'admin@devtracker.com',
-    funcao: 'Administrador',
-    dataEntrada: '31/12/2022',
-  },
-  {
-    id: 2,
-    nome: 'Project Manager',
-    email: 'pm@devtracker.com',
-    funcao: 'Gerente de Projeto',
-    dataEntrada: '01/01/2023',
-  },
-  {
-    id: 3,
-    nome: 'Developer One',
-    email: 'dev1@devtracker.com',
-    funcao: 'Desenvolvedor',
-    dataEntrada: '02/01/2023',
-  },
-  {
-    id: 4,
-    nome: 'Developer Two',
-    email: 'dev2@devtracker.com',
-    funcao: 'Desenvolvedor',
-    dataEntrada: '03/01/2023',
-  },
-  {
-    id: 5,
-    nome: 'Viewer User',
-    email: 'viewer@devtracker.com',
-    funcao: 'Visualizador',
-    dataEntrada: '04/01/2023',
-  },
-];
-
-const badgeVariant = (funcao) => {
-  switch (funcao) {
+const badgeVariant = (departamento) => {
+  switch (departamento) {
     case 'Administrador':
       return 'primary';
     case 'Gerente de Projeto':
@@ -57,6 +27,92 @@ const badgeVariant = (funcao) => {
 };
 
 const Equipe = () => {
+  const [membros, setMembros] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [novoMembro, setNovoMembro] = useState({
+    nome: '',
+    email: '',
+    departamento: 'Desenvolvedor',
+    senha: '',
+  });
+
+  useEffect(() => {
+    const fetchMembros = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/users');
+        if (!response.ok) {
+          throw new Error(`Erro na requisição: ${response.status}`);
+        }
+        const data = await response.json();
+        setMembros(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembros();
+  }, []);
+
+  const handleNovoMembroChange = (e) => {
+    const { name, value } = e.target;
+    setNovoMembro((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddMembro = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(novoMembro),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Erro ${response.status}: ${errorBody}`);
+    }
+
+    const fetchResponse = await fetch('http://localhost:8080/api/users');
+    const data = await fetchResponse.json();
+    setMembros(data);
+    setShowModal(false);
+    setNovoMembro({
+      nome: '',
+      email: '',
+      departamento: 'Desenvolvedor',
+      senha: '',
+    });
+  } catch (err) {
+    alert(`Erro ao adicionar membro: ${err.message}`);
+    console.error(err);
+  }
+};
+
+  if (loading) {
+    return (
+      <div className="d-flex">
+        <Sidebar />
+        <Container fluid className="p-4" style={{ marginLeft: '200px' }}>
+          <p>Carregando membros...</p>
+        </Container>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="d-flex">
+        <Sidebar />
+        <Container fluid className="p-4" style={{ marginLeft: '200px' }}>
+          <p className="text-danger">Erro: {error}</p>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="d-flex">
       <Sidebar />
@@ -64,10 +120,12 @@ const Equipe = () => {
         <Row className="mb-4">
           <Col>
             <h3 className="fw-bold">Equipe</h3>
-            <p className="text-muted m-0">Gerencie os membros da sua equipe e suas permissões</p>
+            <p className="text-muted m-0">
+              Gerencie os membros da sua equipe e suas permissões
+            </p>
           </Col>
           <Col xs="auto" className="d-flex align-items-start justify-content-end">
-            <Button variant="primary">
+            <Button variant="primary" onClick={() => setShowModal(true)}>
               <FaUserPlus className="me-2" />
               Novo Membro
             </Button>
@@ -85,12 +143,15 @@ const Equipe = () => {
               </tr>
             </thead>
             <tbody>
-              {membros.map((membro) => (
-                <tr key={membro.id}>
+              {membros.map((membro, index) => (
+                <tr key={membro.id ?? index}>
                   <td>
                     <div className="d-flex align-items-center gap-3">
-                      <div className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
-                        {membro.nome.charAt(0)}
+                      <div
+                        className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ width: '36px', height: '36px' }}
+                      >
+                        {membro.nome ? membro.nome.charAt(0) : '?'}
                       </div>
                       <div>
                         <div className="fw-semibold">{membro.nome}</div>
@@ -99,8 +160,10 @@ const Equipe = () => {
                     </div>
                   </td>
                   <td>
-                    <span className={`badge bg-${badgeVariant(membro.funcao)} px-3 py-1`}>
-                      {membro.funcao}
+                    <span
+                      className={`badge bg-${badgeVariant(membro.departamento)} px-3 py-1`}
+                    >
+                      {membro.departamento}
                     </span>
                   </td>
                   <td>{membro.dataEntrada}</td>
@@ -115,6 +178,67 @@ const Equipe = () => {
             </tbody>
           </Table>
         </div>
+
+        <Modal show={showModal} onHide={() => setShowModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Novo Membro</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Nome</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="nome"
+                  value={novoMembro.nome}
+                  onChange={handleNovoMembroChange}
+                  placeholder="Digite o nome"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={novoMembro.email}
+                  onChange={handleNovoMembroChange}
+                  placeholder="Digite o email"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Função</Form.Label>
+                <Form.Select
+                  name="departamento"
+                  value={novoMembro.departamento}
+                  onChange={handleNovoMembroChange}
+                >
+                  <option>Administrador</option>
+                  <option>Gerente de Projeto</option>
+                  <option>Desenvolvedor</option>
+                  <option>Visualizador</option>
+                </Form.Select>
+              </Form.Group>
+              <Form.Group className="mb-4">
+                <Form.Label>Senha</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="senha"
+                  value={novoMembro.senha}
+                  onChange={handleNovoMembroChange}
+                  placeholder="Digite a senha"
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="primary" onClick={handleAddMembro}>
+              Adicionar Membro
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
   );
