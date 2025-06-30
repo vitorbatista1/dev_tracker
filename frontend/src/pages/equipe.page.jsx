@@ -11,6 +11,13 @@ import {
 import { FaUserPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 
+import {
+  listarUsuarios,
+  criarUsuario,
+  atualizarUsuario,
+  deletarUsuario,
+} from '../services/userService';
+
 const badgeVariant = (departamento) => {
   switch (departamento) {
     case 'Administrador': return 'primary';
@@ -40,21 +47,23 @@ const Equipe = () => {
     senha: '',
   });
 
+
+  const fetchMembros = async () => {
+    try {
+      const data = await listarUsuarios();
+      setMembros(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMembros = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/api/users');
-        if (!response.ok) throw new Error(`Erro na requisição: ${response.status}`);
-        const data = await response.json();
-        setMembros(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMembros();
   }, []);
+
+
 
   const handleNovoMembroChange = (e) => {
     const { name, value } = e.target;
@@ -68,17 +77,8 @@ const Equipe = () => {
 
   const handleAddMembro = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novoMembro),
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-
-      const res = await fetch('http://localhost:8080/api/users');
-      const data = await res.json();
-      setMembros(data);
+      await criarUsuario(novoMembro);
+      await fetchMembros();
       setShowModal(false);
       setNovoMembro({
         nome: '',
@@ -93,15 +93,8 @@ const Equipe = () => {
 
   const confirmarDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${membroParaDeletar._id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-
-      setMembros((prev) =>
-        prev.filter((m) => m._id !== membroParaDeletar._id)
-      );
+      await deletarUsuario(membroParaDeletar._id);
+      setMembros((prev) => prev.filter((m) => m._id !== membroParaDeletar._id));
       setShowDeleteModal(false);
       setMembroParaDeletar(null);
     } catch (err) {
@@ -112,17 +105,8 @@ const Equipe = () => {
   const confirmarEdit = async () => {
     try {
       const { _id, ...dadosEditados } = membroParaEditar;
-      const response = await fetch(`http://localhost:8080/api/users/${_id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dadosEditados),
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-
-      const res = await fetch('http://localhost:8080/api/users');
-      const data = await res.json();
-      setMembros(data);
+      await atualizarUsuario(_id, dadosEditados);
+      await fetchMembros();
       setShowEditModal(false);
       setMembroParaEditar(null);
     } catch (err) {
