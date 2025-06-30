@@ -13,16 +13,11 @@ import Sidebar from '../components/Sidebar';
 
 const badgeVariant = (departamento) => {
   switch (departamento) {
-    case 'Administrador':
-      return 'primary';
-    case 'Gerente de Projeto':
-      return 'info';
-    case 'Desenvolvedor':
-      return 'secondary';
-    case 'Visualizador':
-      return 'light';
-    default:
-      return 'dark';
+    case 'Administrador': return 'primary';
+    case 'Gerente de Projeto': return 'info';
+    case 'Desenvolvedor': return 'secondary';
+    case 'Visualizador': return 'light';
+    default: return 'dark';
   }
 };
 
@@ -30,7 +25,14 @@ const Equipe = () => {
   const [membros, setMembros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const [membroParaDeletar, setMembroParaDeletar] = useState(null);
+  const [membroParaEditar, setMembroParaEditar] = useState(null);
+
   const [novoMembro, setNovoMembro] = useState({
     nome: '',
     email: '',
@@ -42,9 +44,7 @@ const Equipe = () => {
     const fetchMembros = async () => {
       try {
         const response = await fetch('http://localhost:8080/api/users');
-        if (!response.ok) {
-          throw new Error(`Erro na requisição: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Erro na requisição: ${response.status}`);
         const data = await response.json();
         setMembros(data);
       } catch (err) {
@@ -53,7 +53,6 @@ const Equipe = () => {
         setLoading(false);
       }
     };
-
     fetchMembros();
   }, []);
 
@@ -62,34 +61,74 @@ const Equipe = () => {
     setNovoMembro((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEditMembroChange = (e) => {
+    const { name, value } = e.target;
+    setMembroParaEditar((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleAddMembro = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(novoMembro),
-    });
+    try {
+      const response = await fetch('http://localhost:8080/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(novoMembro),
+      });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`Erro ${response.status}: ${errorBody}`);
+      if (!response.ok) throw new Error(await response.text());
+
+      const res = await fetch('http://localhost:8080/api/users');
+      const data = await res.json();
+      setMembros(data);
+      setShowModal(false);
+      setNovoMembro({
+        nome: '',
+        email: '',
+        departamento: 'Desenvolvedor',
+        senha: '',
+      });
+    } catch (err) {
+      alert(`Erro ao adicionar membro: ${err.message}`);
     }
+  };
 
-    const fetchResponse = await fetch('http://localhost:8080/api/users');
-    const data = await fetchResponse.json();
-    setMembros(data);
-    setShowModal(false);
-    setNovoMembro({
-      nome: '',
-      email: '',
-      departamento: 'Desenvolvedor',
-      senha: '',
-    });
-  } catch (err) {
-    alert(`Erro ao adicionar membro: ${err.message}`);
-    console.error(err);
-  }
-};
+  const confirmarDelete = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/users/${membroParaDeletar._id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error(await response.text());
+
+      setMembros((prev) =>
+        prev.filter((m) => m._id !== membroParaDeletar._id)
+      );
+      setShowDeleteModal(false);
+      setMembroParaDeletar(null);
+    } catch (err) {
+      alert(`Erro ao deletar membro: ${err.message}`);
+    }
+  };
+
+  const confirmarEdit = async () => {
+    try {
+      const { _id, ...dadosEditados } = membroParaEditar;
+      const response = await fetch(`http://localhost:8080/api/users/${_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dadosEditados),
+      });
+
+      if (!response.ok) throw new Error(await response.text());
+
+      const res = await fetch('http://localhost:8080/api/users');
+      const data = await res.json();
+      setMembros(data);
+      setShowEditModal(false);
+      setMembroParaEditar(null);
+    } catch (err) {
+      alert(`Erro ao editar membro: ${err.message}`);
+    }
+  };
 
   if (loading) {
     return (
@@ -120,9 +159,7 @@ const Equipe = () => {
         <Row className="mb-4">
           <Col>
             <h3 className="fw-bold">Equipe</h3>
-            <p className="text-muted m-0">
-              Gerencie os membros da sua equipe e suas permissões
-            </p>
+            <p className="text-muted m-0">Gerencie os membros da sua equipe e suas permissões</p>
           </Col>
           <Col xs="auto" className="d-flex align-items-start justify-content-end">
             <Button variant="primary" onClick={() => setShowModal(true)}>
@@ -143,15 +180,12 @@ const Equipe = () => {
               </tr>
             </thead>
             <tbody>
-              {membros.map((membro, index) => (
-                <tr key={membro.id ?? index}>
+              {membros.map((membro) => (
+                <tr key={membro._id}>
                   <td>
                     <div className="d-flex align-items-center gap-3">
-                      <div
-                        className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
-                        style={{ width: '36px', height: '36px' }}
-                      >
-                        {membro.nome ? membro.nome.charAt(0) : '?'}
+                      <div className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
+                        {membro.nome?.charAt(0) || '?'}
                       </div>
                       <div>
                         <div className="fw-semibold">{membro.nome}</div>
@@ -160,17 +194,27 @@ const Equipe = () => {
                     </div>
                   </td>
                   <td>
-                    <span
-                      className={`badge bg-${badgeVariant(membro.departamento)} px-3 py-1`}
-                    >
+                    <span className={`badge bg-${badgeVariant(membro.departamento)} px-3 py-1`}>
                       {membro.departamento}
                     </span>
                   </td>
                   <td>{membro.dataEntrada}</td>
                   <td>
                     <div className="d-flex gap-3">
-                      <FaEdit className="text-primary cursor-pointer" />
-                      <FaTrash className="text-danger cursor-pointer" />
+                      <FaEdit
+                        className="text-primary cursor-pointer"
+                        onClick={() => {
+                          setMembroParaEditar(membro);
+                          setShowEditModal(true);
+                        }}
+                      />
+                      <FaTrash
+                        className="text-danger cursor-pointer"
+                        onClick={() => {
+                          setMembroParaDeletar(membro);
+                          setShowDeleteModal(true);
+                        }}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -187,56 +231,76 @@ const Equipe = () => {
             <Form>
               <Form.Group className="mb-3">
                 <Form.Label>Nome</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="nome"
-                  value={novoMembro.nome}
-                  onChange={handleNovoMembroChange}
-                  placeholder="Digite o nome"
-                />
+                <Form.Control type="text" name="nome" value={novoMembro.nome} onChange={handleNovoMembroChange} />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="email"
-                  value={novoMembro.email}
-                  onChange={handleNovoMembroChange}
-                  placeholder="Digite o email"
-                />
+                <Form.Control type="email" name="email" value={novoMembro.email} onChange={handleNovoMembroChange} />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Função</Form.Label>
-                <Form.Select
-                  name="departamento"
-                  value={novoMembro.departamento}
-                  onChange={handleNovoMembroChange}
-                >
+                <Form.Select name="departamento" value={novoMembro.departamento} onChange={handleNovoMembroChange}>
                   <option>Administrador</option>
                   <option>Gerente de Projeto</option>
                   <option>Desenvolvedor</option>
                   <option>Visualizador</option>
                 </Form.Select>
               </Form.Group>
-              <Form.Group className="mb-4">
+              <Form.Group>
                 <Form.Label>Senha</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="senha"
-                  value={novoMembro.senha}
-                  onChange={handleNovoMembroChange}
-                  placeholder="Digite a senha"
-                />
+                <Form.Control type="password" name="senha" value={novoMembro.senha} onChange={handleNovoMembroChange} />
               </Form.Group>
             </Form>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancelar
-            </Button>
-            <Button variant="primary" onClick={handleAddMembro}>
-              Adicionar Membro
-            </Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
+            <Button variant="primary" onClick={handleAddMembro}>Adicionar</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirmar Exclusão</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>Deseja excluir <strong>{membroParaDeletar?.nome}</strong>?</Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmarDelete}>Deletar</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Editar Membro</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Nome</Form.Label>
+                <Form.Control type="text" name="nome" value={membroParaEditar?.nome || ''} onChange={handleEditMembroChange} />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control type="email" name="email" value={membroParaEditar?.email || ''} onChange={handleEditMembroChange} />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Função</Form.Label>
+                <Form.Select name="departamento" value={membroParaEditar?.departamento || ''} onChange={handleEditMembroChange}>
+                  <option>Administrador</option>
+                  <option>Gerente de Projeto</option>
+                  <option>Desenvolvedor</option>
+                  <option>Visualizador</option>
+                </Form.Select>
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Nova Senha</Form.Label>
+                <Form.Control type="password" name="senha" value={membroParaEditar?.senha || ''} onChange={handleEditMembroChange} />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancelar</Button>
+            <Button variant="primary" onClick={confirmarEdit}>Salvar</Button>
           </Modal.Footer>
         </Modal>
       </Container>
