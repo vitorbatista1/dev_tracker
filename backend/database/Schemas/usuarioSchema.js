@@ -4,6 +4,7 @@ const usuarioSchema = new mongoose.Schema({
   nome: String,
   email: String,
   cargo: String,
+  senha: String,
   departamento: String,
   data_contratacao: Date
 });

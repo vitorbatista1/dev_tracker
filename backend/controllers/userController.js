@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const userService = require('../services/userService');
 const usuarioSchema = require('../validators/usuarioValidator');
 
@@ -9,13 +10,28 @@ const createUser = async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const novoUsuario = await userService.createUser(req.body);
+    const dadosNovoUsuario = req.body;
+    const senhaCriptografada = bcrypt.genSaltSync(10);
+    dadosNovoUsuario.senha = bcrypt.hashSync(dadosNovoUsuario.senha, senhaCriptografada);
+    const novoUsuario = await userService.createUser(dadosNovoUsuario);
+
     res.status(201).json({ message: 'Usuário cadastrado com sucesso!' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao cadastrar usuário' });
   }
 };
+
+
+const deleteUser = async (req, res) => {
+  try{
+    await userService.deleteUser(req.params.id)
+    res.status(200).json({ message: 'Usuário deletado com sucesso!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao deletar usuário' });
+  }
+}
 
 
 const getAllUsers = async (req, res) => {
@@ -53,5 +69,6 @@ const editUser = async (req, res) => {
 module.exports = {
   createUser,
   getAllUsers,
-  editUser
+  editUser,
+  deleteUser
 };

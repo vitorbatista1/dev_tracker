@@ -12,9 +12,14 @@ const getAllUsers = async () => {
     return usuarios;
 };
 
+const deleteUser = async (id) => {
+  const deletedUser = await Usuario.findByIdAndDelete(id);
+  return deletedUser;
+};
+
 const editUser = async (id, userData) => {
   const updatedUser = await Usuario.findByIdAndUpdate(id, userData, { new: true });
   return updatedUser;
 };
 
-module.exports = {createUser, getAllUsers, editUser};
+module.exports = {createUser, getAllUsers, editUser, deleteUser};
