@@ -7,7 +7,7 @@ import {
   Modal,
 } from 'react-bootstrap';
 import { FaPlus } from 'react-icons/fa';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/siderbar.component';
 import '../styles/projetos.style.css';
 
 const projetosData = [

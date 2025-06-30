@@ -1,44 +1,83 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Form, Button, Alert } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { login } from '../services/userService';
+
+// Animação suave ao entrar na tela
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const ContainerWrapper = styled.div`
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  padding: 20px;
 `;
 
 const StyledCard = styled.div`
-  background: #fff;
-  padding: 40px 30px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+  background: #ffffff;
+  padding: 50px 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
   width: 100%;
+  max-width: 420px;
+  animation: ${fadeInUp} 0.6s ease;
 `;
 
 const Title = styled.h2`
   text-align: center;
-  margin-bottom: 24px;
-  color: #333;
+  margin-bottom: 32px;
+  font-weight: bold;
+  color: #333333;
 `;
 
 const StyledButton = styled(Button)`
   width: 100%;
   background-color: #2575fc;
   border: none;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: 0.3s ease;
+
   &:hover {
     background-color: #1a5ed9;
+    transform: scale(1.02);
   }
 `;
 
 const StyledFormLabel = styled(Form.Label)`
   font-weight: 600;
-  color: #444;
+  color: #444444;
+  margin-bottom: 6px;
+`;
+
+const StyledInput = styled(Form.Control)`
+  border-radius: 10px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  box-shadow: none;
+
+  &:focus {
+    border-color: #2575fc;
+    box-shadow: 0 0 0 0.2rem rgba(37, 117, 252, 0.25);
+  }
+`;
+
+const StyledAlert = styled(Alert)`
+  text-align: center;
+  font-weight: 500;
 `;
 
 const LoginForm = () => {
@@ -48,20 +87,13 @@ const LoginForm = () => {
   const [mensagem, setMensagem] = useState(null);
   const [tipoMensagem, setTipoMensagem] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (email === 'admin@teste.com' && senha === '123456') {
-      setMensagem('Login realizado com sucesso!');
-      setTipoMensagem('success');
-      localStorage.setItem('token', '123456');
-      localStorage.setItem('nome', 'Admin');
-
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-    } else {
-      setMensagem('Email ou senha inválidos!');
+    try {
+      await login(email, senha);
+      navigate('/dashboard');
+    } catch (err) {
+      setMensagem(err.message);
       setTipoMensagem('danger');
     }
   };
@@ -69,11 +101,11 @@ const LoginForm = () => {
   return (
     <ContainerWrapper>
       <StyledCard>
-        <Title>Login</Title>
+        <Title>Bem-vindo de volta</Title>
         <Form onSubmit={handleSubmit}>
-          <Form.Group controlId="formEmail" className="mb-3">
+          <Form.Group controlId="formEmail" className="mb-4">
             <StyledFormLabel>Email</StyledFormLabel>
-            <Form.Control
+            <StyledInput
               type="email"
               placeholder="Digite seu email"
               value={email}
@@ -81,10 +113,9 @@ const LoginForm = () => {
               required
             />
           </Form.Group>
-
-          <Form.Group controlId="formSenha" className="mb-3">
+          <Form.Group controlId="formSenha" className="mb-4">
             <StyledFormLabel>Senha</StyledFormLabel>
-            <Form.Control
+            <StyledInput
               type="password"
               placeholder="Digite sua senha"
               value={senha}
@@ -92,16 +123,12 @@ const LoginForm = () => {
               required
             />
           </Form.Group>
-
-          <StyledButton variant="primary" type="submit">
-            Entrar
-          </StyledButton>
+          <StyledButton type="submit">Entrar</StyledButton>
         </Form>
-
         {mensagem && (
-          <Alert variant={tipoMensagem} className="mt-3">
+          <StyledAlert variant={tipoMensagem} className="mt-3">
             {mensagem}
-          </Alert>
+          </StyledAlert>
         )}
       </StyledCard>
     </ContainerWrapper>

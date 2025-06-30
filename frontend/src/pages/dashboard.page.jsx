@@ -5,7 +5,7 @@ import {
 import {
   FaFolder, FaClock, FaPauseCircle, FaCheckCircle
 } from 'react-icons/fa';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/siderbar.component';
 
 const initialProjetos = [
   {

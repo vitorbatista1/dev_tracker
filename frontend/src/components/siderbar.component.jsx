@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from 'react-bootstrap';
 import { FaFolder, FaUsers, FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa'; // Adicionei FaTachometerAlt
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/userService';
 
 import './Sidebar.css';
 
@@ -9,9 +10,17 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const nomeUsuario = localStorage.getItem('nome');
 
-  const handleLogout = () => {
-    navigate('/');
-  };
+const handleLogout = async () => {
+  try {
+    await logout();
+  } catch (err) {
+    console.error('Erro ao fazer logout no servidor');
+  }
+
+  localStorage.removeItem('token');
+  localStorage.removeItem('nome');
+  navigate('/');
+};
 
   const handleEquipe = () => {
     navigate('/equipe');

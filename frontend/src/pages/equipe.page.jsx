@@ -9,7 +9,9 @@ import {
   Form,
 } from 'react-bootstrap';
 import { FaUserPlus, FaEdit, FaTrash } from 'react-icons/fa';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/siderbar.component';
+import { jwtDecode } from 'jwt-decode';
+
 
 import {
   listarUsuarios,
@@ -18,8 +20,9 @@ import {
   deletarUsuario,
 } from '../services/userService';
 
-const badgeVariant = (departamento) => {
-  switch (departamento) {
+
+const badgeVariant = (funcao) => {
+  switch (funcao) {
     case 'Administrador': return 'primary';
     case 'Gerente de Projeto': return 'info';
     case 'Desenvolvedor': return 'secondary';
@@ -43,10 +46,19 @@ const Equipe = () => {
   const [novoMembro, setNovoMembro] = useState({
     nome: '',
     email: '',
-    departamento: 'Desenvolvedor',
+    funcao: 'Desenvolvedor',
     senha: '',
   });
 
+  const token = localStorage.getItem('token');
+  const usuarioLogado = token ? jwtDecode(token) : null;
+  const funcaoUsuarioLogado = usuarioLogado?.usuarioFuncao || '';
+
+  const formatarData = (data) => {
+    if (!data) return '-';
+    const d = new Date(data);
+    return d.toLocaleDateString('pt-BR');
+  };
 
   const fetchMembros = async () => {
     try {
@@ -62,8 +74,6 @@ const Equipe = () => {
   useEffect(() => {
     fetchMembros();
   }, []);
-
-
 
   const handleNovoMembroChange = (e) => {
     const { name, value } = e.target;
@@ -83,7 +93,7 @@ const Equipe = () => {
       setNovoMembro({
         nome: '',
         email: '',
-        departamento: 'Desenvolvedor',
+        funcao: 'Desenvolvedor',
         senha: '',
       });
     } catch (err) {
@@ -146,10 +156,12 @@ const Equipe = () => {
             <p className="text-muted m-0">Gerencie os membros da sua equipe e suas permissões</p>
           </Col>
           <Col xs="auto" className="d-flex align-items-start justify-content-end">
-            <Button variant="primary" onClick={() => setShowModal(true)}>
-              <FaUserPlus className="me-2" />
-              Novo Membro
-            </Button>
+            {funcaoUsuarioLogado === 'Administrador' && (
+              <Button variant="primary" onClick={() => setShowModal(true)}>
+                <FaUserPlus className="me-2" />
+                Novo Membro
+              </Button>
+            )}
           </Col>
         </Row>
 
@@ -160,7 +172,7 @@ const Equipe = () => {
                 <th>Membros</th>
                 <th>Função</th>
                 <th>Data de Entrada</th>
-                <th>Ações</th>
+                {funcaoUsuarioLogado === 'Administrador' && <th>Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -178,27 +190,31 @@ const Equipe = () => {
                     </div>
                   </td>
                   <td>
-                    <span className={`badge bg-${badgeVariant(membro.departamento)} px-3 py-1`}>
-                      {membro.departamento}
+                    <span className={`badge bg-${badgeVariant(membro.funcao)} px-3 py-1`}>
+                      {membro.funcao}
                     </span>
                   </td>
-                  <td>{membro.dataEntrada}</td>
+                  <td>{formatarData(membro.data_contratacao)}</td>
                   <td>
                     <div className="d-flex gap-3">
-                      <FaEdit
-                        className="text-primary cursor-pointer"
-                        onClick={() => {
-                          setMembroParaEditar(membro);
-                          setShowEditModal(true);
-                        }}
-                      />
-                      <FaTrash
-                        className="text-danger cursor-pointer"
-                        onClick={() => {
-                          setMembroParaDeletar(membro);
-                          setShowDeleteModal(true);
-                        }}
-                      />
+                      {funcaoUsuarioLogado === 'Administrador' && (
+                        <>
+                          <FaEdit
+                            className="text-primary cursor-pointer"
+                            onClick={() => {
+                              setMembroParaEditar(membro);
+                              setShowEditModal(true);
+                            }}
+                          />
+                          <FaTrash
+                            className="text-danger cursor-pointer"
+                            onClick={() => {
+                              setMembroParaDeletar(membro);
+                              setShowDeleteModal(true);
+                            }}
+                          />
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -223,7 +239,7 @@ const Equipe = () => {
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Função</Form.Label>
-                <Form.Select name="departamento" value={novoMembro.departamento} onChange={handleNovoMembroChange}>
+                <Form.Select name="funcao" value={novoMembro.funcao} onChange={handleNovoMembroChange}>
                   <option>Administrador</option>
                   <option>Gerente de Projeto</option>
                   <option>Desenvolvedor</option>
@@ -269,7 +285,7 @@ const Equipe = () => {
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Função</Form.Label>
-                <Form.Select name="departamento" value={membroParaEditar?.departamento || ''} onChange={handleEditMembroChange}>
+                <Form.Select name="funcao" value={membroParaEditar?.funcao || ''} onChange={handleEditMembroChange}>
                   <option>Administrador</option>
                   <option>Gerente de Projeto</option>
                   <option>Desenvolvedor</option>

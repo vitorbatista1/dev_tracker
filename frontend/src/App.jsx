@@ -5,15 +5,37 @@ import LoginForm from './pages/login.page';
 import Dashboard from './pages/dashboard.page';
 import Equipe from './pages/equipe.page';
 import Projetos from './pages/projetos.page';
+import PrivateRoute from './components/private.route.component';
 
 const App = () => {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LoginForm />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/equipe" element={<Equipe />} />
-        <Route path="/projetos" element={<Projetos />} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/equipe"
+          element={
+            <PrivateRoute>
+              <Equipe />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/projetos"
+          element={
+            <PrivateRoute>
+              <Projetos />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );
