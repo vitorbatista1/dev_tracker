@@ -18,8 +18,8 @@ const usuarioSchema = Joi.object({
     'any.required': 'o campo senha é obrigatório'
   }),
 
-  departamento: Joi.string().required().messages({
-    'any.required': 'departamento é obrigatório e não pode estar vazio'
+  funcao: Joi.string().required().messages({
+    'any.required': 'funcao é obrigatório e não pode estar vazio'
   })
 });
 

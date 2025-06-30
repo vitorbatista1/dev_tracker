@@ -5,12 +5,13 @@ const usuarioSchema = require('../validators/usuarioValidator');
 const createUser = async (req, res) => {
   try {
     const { error } = usuarioSchema.validate(req.body, { stripUnknown: true });
-
+    
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const dadosNovoUsuario = req.body;
+    
+    const dadosNovoUsuario = req.body;  
     const senhaCriptografada = bcrypt.genSaltSync(10);
     dadosNovoUsuario.senha = bcrypt.hashSync(dadosNovoUsuario.senha, senhaCriptografada);
     const novoUsuario = await userService.createUser(dadosNovoUsuario);

@@ -5,8 +5,11 @@ const usuarioSchema = new mongoose.Schema({
   email: String,
   cargo: String,
   senha: String,
-  departamento: String,
-  data_contratacao: Date
+  funcao: String,
+  data_contratacao: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
